@@ -1,17 +1,23 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Alert} from 'react-native';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton'; 
 import SocialSignInButtons from '../../components/SocialSignInButtons';
 import { useNavigation } from '@react-navigation/native';
+import {useForm} from 'react-hook-form';
+import {Auth} from 'aws-amplify';
 
 const ForgotPasswordScreen = () => {
-    const [username, setUsername] = useState('');
-
+    const {control, handleSubmit} = useForm();
     const navigation = useNavigation();
 
-    const onSendPressed = () => {
-        navigation.navigate('NewPassword')
+    const onSendPressed = async data => {
+        try {
+            await Auth.forgotPassword(data.username);
+            navigation.navigate('NewPassword');
+        } catch (e) {
+            Alert.alert("Oops", e.message);
+        }
     };
     
     const onSignInPress = () => {
@@ -23,13 +29,17 @@ const ForgotPasswordScreen = () => {
             <Text style={styles.title}>Reset your password</Text>
           
             <CustomInput 
-                placeholder="Username" 
-                value={username} 
-                setValue={setUsername} 
+                name="username"
+                control={control}
+                placeholder="Username"
+                rules={{
+                    required: 'Username is required'
+                }} 
+                
             />
             
 
-            <CustomButton text="Send" onPress={onSendPressed} />
+            <CustomButton text="Send" onPress={handleSubmit(onSendPressed)} />
 
             <CustomButton 
                 text="Back to Sign in" 
